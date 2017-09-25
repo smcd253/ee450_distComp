@@ -1,0 +1,88 @@
+ReadMe.pdf
+******************************************************************************************
+a. Spencer McDonough
+******************************************************************************************
+b. 6341617166
+******************************************************************************************
+c. In this assignment, I wrote 4 scripts to perform bit-wise AND and bitwise OR functions 
+using distributed computing. Aside from fulfilling the general requirements of the,
+my project is unique in that I perform all bitwise operations using if/else statements
+to manipulate character arrays.
+******************************************************************************************
+d. 
+client.cpp: 
+- B4 Operations: reads in string from text file "job.txt", packages it into a character 
+array, and sends it to the edge server using TCP (socket stream).
+- After Operations: listens for results on socket stream, receives results and separates 
+them by operation type (AND or OR)
+
+edge.cpp: 
+- B4 Operations: listens for raw data packet on socket stream, receive packet, parse packet 
+for "a" and "o", build AND and OR arrays, send to backend servers via UDP
+- After Operations: listens for results from server_and and server_or on the datagram 
+socket, receives results, processes them to be displayed, appends results to one array 
+to be sent back to client.cpp via TCP
+
+server_and.cpp: receives udp packet from edge server, processes packet to find binary strings,
+pads smaller string, performs AND operation on binary strings, displays results, sends results 
+back to edge server via udp.
+
+server_or.cpp: receives udp packet from edge server, processes packet to find binary strings,
+pads smaller string, performs OR operation on binary strings, displays results, sends results 
+back to edge server via udp.
+******************************************************************************************
+e.
+
+Step 1: make all
+Step 2: ./edge (terminal 1)
+Step 3: ./and (terminal 2)
+Step 4: ./or (terminal 3)
+Step 5: ./client job.txt (terminal 4)
+Step 5.1: If connection error: make killall
+Step 5.1.1: Repeat from Step 5 until ./client displays results
+Step 6: make killall
+Step 7: to rerun, repeat from step 1
+******************************************************************************************
+f. The format of all the messages exchanged.
+
+client --> edge: (TCP) char array consisting of raw data from text file
+edge --> server_and: (UDP) char array consisting of binary strings separated by a comma, jobs
+separated by semicolon
+edge --> server_or: (UDP) char array consisting of binary strings separated by a comma, jobs
+separated by semicolon
+server_or --> edge: (UDP) char array consisting of binary strings, results separated by semicolon
+server_and --> edge: (UDP) char array consisting of binary strings, results separated by semicolon
+edge --> client: (TCP) char array consisting of binary strings, results separated by semicolon,
+AND results first, start of OR results marked by "o" character
+******************************************************************************************
+g. The server_and and server_or do not display the results. This has to do with the nature 
+of the array inside those .cpp files. The way the for loops terminate prevent them from printing 
+properly. I did not have enough time to fix this.
+******************************************************************************************
+h. 
+
+Source: http://www.thegeekstuff.com/2011/12/c-socket-programming/?utm_source=feedburner
+	socket(AF_INET, SOCK_STREAM, 0) - client.cpp:21
+	memset(&edge_addr, 0, sizeof(edge_addr)) - client.cpp:27
+	edge_addr.sin_family = AF_INET - client.cpp:28
+	edge_addr.sin_addr.s_addr = inet_addr("127.0.0.1") - client.cpp:29
+	edge_addr.sin_port = htons(EDGE_PORT_TCP) - client.cpp:30
+	connect(socket_fd, (struct sockaddr*)&edge_addr, sizeof(edge_addr)) - client.cpp:35
+	
+	socklen_t length_and_addr = sizeof(andserver_addr); - edge.cpp:73
+	
+Source: http://stackoverflow.com/questions/6798967/sending-data-in-socket-programming-using-c
+	send(socket_fd, rawdata, packet_length,0) - client.cpp:73
+	accept(socket_fd, (struct sockaddr*)NULL, NULL)) - client.cpp:92
+	recv(socket_fd, results, BUFF_SIZE, 0) - client.cpp:97
+	close(socket_fd) - client.cpp:134
+	
+	bind(sockfd_tcp, (struct sockaddr *) &edge_addr, sizeof(edge_addr)) - edge.cpp:28
+	listen(sockfd_tcp, 10 - edge.cpp:33
+
+Source: http://www.cplusplus.com/forum/unices/116919/
+	sendto(sockfd_udp, buff_and, strlen(buff_and),0,(struct sockaddr*)&andserver_addr,sizeof(andserver_addr)) - edge.cpp:161
+	recvfrom(sockfd_udp, andresults, BUFF_SIZE,0,(struct sockaddr*)&andserver_addr, &length_and_addr) - edge.cpp:182
+	
+All above functions repeated multiple times across scripts
+******************************************************************************************
